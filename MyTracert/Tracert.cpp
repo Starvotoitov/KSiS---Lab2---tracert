@@ -169,8 +169,6 @@ int main(int argc, char **argv)
 	WaitingTime.tv_usec = 0;
 
 	fd_set RecvSocketList;
-	RecvSocketList.fd_count = 1;
-	RecvSocketList.fd_array[0] = Socket;
 
 	void *RecvBuf = malloc(512);
 	IP_Header IPPacketBuf;
@@ -193,6 +191,10 @@ int main(int argc, char **argv)
 		for (int i = 0; i < PACKETS_FOR_ONE_ROUTER; i++)
 		{
 			seq++;
+
+			RecvSocketList.fd_count = 1;
+			RecvSocketList.fd_array[0] = Socket;
+
 			int StartTime = GetTickCount();
 			SendICMPPacket(seq, Socket, SendToAddr);
 			if (int ErrRes = select(0, &RecvSocketList, NULL, NULL, &WaitingTime))
@@ -222,11 +224,13 @@ int main(int argc, char **argv)
 			else
 				printf("  *  ");
 		}
-		
-		if (NameResolution && !getnameinfo((SOCKADDR *)AddressBuf, sizeof(SOCKADDR), HostName, NI_MAXHOST, ServName, NI_MAXSERV, NI_NAMEREQD))
-			printf(" %s ", HostName);
-		printf(" %s ", inet_ntoa(AddressBuf->sin_addr));
-		printf("\n");
+		if (AddressBuf !=NULL)
+		{
+			if (NameResolution && !getnameinfo((SOCKADDR *)AddressBuf, sizeof(SOCKADDR), HostName, NI_MAXHOST, ServName, NI_MAXSERV, NI_NAMEREQD))
+				printf(" %s ", HostName);
+			printf(" %s ", inet_ntoa(AddressBuf->sin_addr));
+			printf("\n");
+		}
 	}
 	while (!EndPoint && SendingCount != TOTAL_SENDING_COUNT);
 
